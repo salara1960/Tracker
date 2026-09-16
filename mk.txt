@@ -1,0 +1,1 @@
+sudo isp_cmd -p /dev/ch37x0 -o program -c ch32x035.ini -f obj/Tracker.hex
