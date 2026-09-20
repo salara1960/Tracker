@@ -26,7 +26,7 @@ const char *uname = "RISC-V CH32X035";
 uint8_t RxBuff[64] = {0};
 volatile uint8_t evt = noneEvt;
 volatile uint8_t ind = 0;
-volatile uint32_t epoch = 1789904188;//1789560799;
+volatile uint32_t epoch = 1789919499;//1789560799;
 // 1789391099;//1789220099;//1789136188;//1789035299;//1788942099;//1788867190;
 volatile uint32_t seconda = 0;
 bool set_time = true;
@@ -767,11 +767,11 @@ int main (void) {
                         ledVolt(VOLT_LED_ON);
                     else
                         ledVolt(VOLT_LED_OFF);
-                    if (no_vld) {
+                    if (no_vld && !gps_valid) {
                         s_float_t flo = {0, 0};
                         floatPart(volt, &flo);
     #ifdef SET_SSD1306_SPI
-                        OLED_clear_lines(GPS_LINE, LAST_LINE, inv);
+                        OLED_clear_line(LAST_LINE, inv);
                         OLED_text_xy(scr, OLED_calcx(sprintf(scr, "volt:%u.%02u\n", flo.cel, flo.dro / 1000)), LAST_LINE, inv);
     #endif             
                     }
@@ -848,8 +848,8 @@ int main (void) {
                                         floatPart (GPS.msl_altitude, &flo);
                                         sprintf (scr + strlen (scr), " sat:%d alt:%u", GPS.satelites, flo.cel);
 #ifdef SET_SSD1306_SPI
-                                        OLED_clear_lines (GPS_LINE, GPS_LINE + 2, inv);
-                                        OLED_text_xy (scr, 1, GPS_LINE, inv);
+                                        OLED_clear_lines(GPS_LINE, GPS_LINE + 2, inv);
+                                        OLED_text_xy(scr, 1, GPS_LINE, inv);
 #endif
                                     } else {
 #ifdef SET_SSD1306_SPI
@@ -860,9 +860,8 @@ int main (void) {
                                             OLED_text_xy (tmp, OLED_calcx (sprintf (tmp, "%s", uname)), LAST_LINE, inv);
     #endif                                    
 #ifdef SET_SCROLL_MODE
-                                            // if (!scrollFlag)
-                                            OLED_StartScroll (shift_start, shift_stop, true);
-                                            // OLED_Scroll(shift_start, shift_stop, 0x2f);//0x2e - deactivate, 0x2f - activate
+                                            if (!scrollFlag) OLED_StartScroll (shift_start, shift_stop, true);
+                                            //OLED_Scroll(shift_start, shift_stop, 0x2f);//0x2e - deactivate, 0x2f - activate
 #endif
                                         }
 #endif
@@ -871,8 +870,8 @@ int main (void) {
                                 }
                             }  // else Report(NULL, true, "[%s]%s\n", rt ? "true" : "false", gBuf);
                         } else {
-                            OLED_clear_line (LAST_LINE - 1, inv);
-                            OLED_text_xy (tmp, OLED_calcx (sprintf (tmp, "gpsEvt")), LAST_LINE - 1, inv);
+                            OLED_clear_line(LAST_LINE - 1, inv);
+                            OLED_text_xy(tmp, OLED_calcx (sprintf(tmp, "gpsEvt")), LAST_LINE - 1, inv);
                         }
 #endif
                     }
