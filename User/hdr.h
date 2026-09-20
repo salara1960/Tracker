@@ -25,7 +25,12 @@
 #define SET_SSD1306_SPI
 #define SET_GPS
 #define SET_FLOAT_PART
+#define SET_ADC_VOLT
 
+
+#ifdef SET_ADC_VOLT
+	#include "volt.h"
+#endif
 
 
 #if defined(SET_SSD1306_SPI)
@@ -115,6 +120,7 @@ enum {
 	keyEvt,
 	slpEvt,
 	wupEvt,
+	voltEvt,
 	errEvt
 };
 

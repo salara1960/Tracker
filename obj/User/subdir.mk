@@ -9,21 +9,24 @@ C_SRCS += \
 ../User/gps.c \
 ../User/main.c \
 ../User/ssd1306.c \
-../User/system_ch32x035.c 
+../User/system_ch32x035.c \
+../User/volt.c 
 
 C_DEPS += \
 ./User/ch32x035_it.d \
 ./User/gps.d \
 ./User/main.d \
 ./User/ssd1306.d \
-./User/system_ch32x035.d 
+./User/system_ch32x035.d \
+./User/volt.d 
 
 OBJS += \
 ./User/ch32x035_it.o \
 ./User/gps.o \
 ./User/main.o \
 ./User/ssd1306.o \
-./User/system_ch32x035.o 
+./User/system_ch32x035.o \
+./User/volt.o 
 
 DIR_OBJS += \
 ./User/*.o \

@@ -1,4 +1,4 @@
-User/ssd1306.o: ../User/ssd1306.c ../User/ssd1306.h ../User/hdr.h \
+User/volt.o: ../User/volt.c ../User/hdr.h \
  /home/alarm/mounriver-studio-projects/CH32X035/Tracker/Peripheral/inc/ch32x035.h \
  /home/alarm/mounriver-studio-projects/CH32X035/Tracker/Core/core_riscv.h \
  /home/alarm/mounriver-studio-projects/CH32X035/Tracker/User/system_ch32x035.h \
@@ -22,9 +22,7 @@ User/ssd1306.o: ../User/ssd1306.c ../User/ssd1306.h ../User/hdr.h \
  /home/alarm/mounriver-studio-projects/CH32X035/Tracker/User/ch32x035_it.h \
  /home/alarm/mounriver-studio-projects/CH32X035/Tracker/Debug/debug.h \
  /home/alarm/mounriver-studio-projects/CH32X035/Tracker/Peripheral/inc/ch32x035_misc.h \
- ../User/volt.h ../User/gps.h
-
-../User/ssd1306.h:
+ ../User/volt.h ../User/ssd1306.h ../User/gps.h
 
 ../User/hdr.h:
 
@@ -75,5 +73,7 @@ User/ssd1306.o: ../User/ssd1306.c ../User/ssd1306.h ../User/hdr.h \
 /home/alarm/mounriver-studio-projects/CH32X035/Tracker/Peripheral/inc/ch32x035_misc.h:
 
 ../User/volt.h:
+
+../User/ssd1306.h:
 
 ../User/gps.h:

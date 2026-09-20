@@ -22,7 +22,7 @@ User/main.o: ../User/main.c ../User/hdr.h \
  /home/alarm/mounriver-studio-projects/CH32X035/Tracker/User/ch32x035_it.h \
  /home/alarm/mounriver-studio-projects/CH32X035/Tracker/Debug/debug.h \
  /home/alarm/mounriver-studio-projects/CH32X035/Tracker/Peripheral/inc/ch32x035_misc.h \
- ../User/ssd1306.h ../User/gps.h
+ ../User/volt.h ../User/ssd1306.h ../User/gps.h
 
 ../User/hdr.h:
 
@@ -71,6 +71,8 @@ User/main.o: ../User/main.c ../User/hdr.h \
 /home/alarm/mounriver-studio-projects/CH32X035/Tracker/Debug/debug.h:
 
 /home/alarm/mounriver-studio-projects/CH32X035/Tracker/Peripheral/inc/ch32x035_misc.h:
+
+../User/volt.h:
 
 ../User/ssd1306.h:
 
