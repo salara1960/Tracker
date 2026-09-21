@@ -17,8 +17,10 @@
 // const char *ver = "GPS app ver.04";//11.09.2026 - §æ§å§ß§Ü§è§Ú§ñ DateTimeToEpoch() §â§Ñ§Ò§à§ä§Ñ§Ö§ä §ß§Ö §Ó§Ö§â§ß§à !!!(§Õ§Ö§ß§î §ß§Ñ 1 §Ò§à§Ý§î§ê§Ö))
 // const char *ver = "GPS app ver.05";//12.09.2026 - §Õ§Ý§ñ §æ§å§ß§Ü§è§Ú§Ú DateTimeToEpoch() §ã§Õ§Ö§Ý§Ñ§ß §Ü§à§ã§ä§í§Ý§î !
 // const char *ver = "GPS app ver.06";//14.09.2026 - add key - PA0 in interrupt mode
-//const char *ver = "GPS app ver.07";  // 16.09.2026
-const char *ver = "GPS app ver.08";  // 20.09.2026 - add ADC_chan4 (PA4) for get voltage power
+//const char *ver = "GPS app ver.07"; // 16.09.2026
+//const char *ver = "GPS app ver.08";  // 20.09.2026 - add ADC_chan4 (PA4) for get voltage power
+const char *ver = "GPS app ver.09"; // 21.09.2026 
+
 
 
 const char *eol = "\n";
@@ -26,7 +28,7 @@ const char *uname = "RISC-V CH32X035";
 uint8_t RxBuff[64] = {0};
 volatile uint8_t evt = noneEvt;
 volatile uint8_t ind = 0;
-volatile uint32_t epoch = 1789919499;//1789560799;
+volatile uint32_t epoch = 1790004099;//1789919499;//1789560799;
 // 1789391099;//1789220099;//1789136188;//1789035299;//1788942099;//1788867190;
 volatile uint32_t seconda = 0;
 bool set_time = true;
@@ -46,16 +48,18 @@ bool key_enable = false;
 uint8_t key_val = 0;
 bool sleep_mode = false;
 uint32_t key_tmr = 0;
+uint32_t pressed_tmr = 0;
 
 bool oledOnOff = true;
 
 #ifdef SET_GPS
-uint8_t pps_val = 0;
-bool pps_enable = false;
-char RxGps[128] = {0};
-volatile uint8_t ind_gps = 0;
-// const char *gps_mask = "RMC";
+    uint8_t pps_val = 0;
+    bool pps_enable = false;
+    char RxGps[128] = {0};
+    volatile uint8_t ind_gps = 0;
+    // const char *gps_mask = "RMC";
 #endif
+
 
 //----------------------------------------------------------------------------------------
 
@@ -213,7 +217,7 @@ void PPS_INIT (void) {
     GPIO_EXTILineConfig (GPIO_PortSourceGPIOA, GPIO_PinSource0);
     EXTI_InitStructure.EXTI_Line = EXTI_Line0;
     EXTI_InitStructure.EXTI_Mode = EXTI_Mode_Interrupt;
-    EXTI_InitStructure.EXTI_Trigger = EXTI_Trigger_Rising;
+    EXTI_InitStructure.EXTI_Trigger = EXTI_Trigger_Rising_Falling;
     EXTI_InitStructure.EXTI_LineCmd = ENABLE;
     EXTI_Init (&EXTI_InitStructure);
 
@@ -245,26 +249,24 @@ void EXTI7_0_IRQHandler (void) {
         EXTI_ClearITPendingBit (EXTI_Line1);
     } else if (EXTI_GetITStatus (EXTI_Line0) != RESET) {
         key_val = GPIO_ReadInputDataBit (KEY_PORT, KEY_PIN);
-        if (key_enable && key_val) {
-            if (sleep_mode) {  // exit from sleep_mode
-                SystemInit();
-                if (queFlag) {
-                    q_rec_t rc = {wupEvt, NULL};
-                    if (putRECQ (&rc, &queEvt) == noneEvt)
-                        devError |= devQue;
+        if (key_val) pressed_tmr = get_sec(0);
+        if (key_enable && !key_val && queFlag) {
+            q_rec_t rc = {noneEvt, NULL};
+            if ((get_sec(0) - pressed_tmr) < 3) {
+                rc.evt = wupEvt;
+                if (sleep_mode) {  // exit from sleep_mode
+                    SystemInit();
+                    sleep_mode = false;
+                } else {  // go to sleep mode
+                    rc.evt = slpEvt;
                 }
-                sleep_mode = false;
-                key_enable = false;
-            } else {  // go to sleep mode
-                if (queFlag) {
-                    q_rec_t rc = {slpEvt, NULL};
-                    if (putRECQ (&rc, &queEvt) == noneEvt)
-                        devError |= devQue;
-                }
-                // sleep_mode = true;
-                key_enable = false;
+            } else {
+                rc.evt = rstEvt;
+                pressed_tmr = 0;
             }
-            key_tmr = get_sec (2);
+            if (putRECQ (&rc, &queEvt) == noneEvt) devError |= devQue;
+            key_enable = false;
+            key_tmr = get_sec(2);
         }
         EXTI_ClearITPendingBit (EXTI_Line0);
     }
@@ -434,15 +436,13 @@ void TIM1_UP_IRQHandler (void) {
 
         if (queFlag && !sleep_mode) {
             q_rec_t rc = {secEvt, NULL};
-            if (putRECQ (&rc, &queEvt) == noneEvt)
-                devError |= devQue;
+            if (putRECQ (&rc, &queEvt) == noneEvt) devError |= devQue;
         }
 
         if (!oledOnOff && sleep_mode) {
             if (queFlag) {
                 q_rec_t rc = {wupEvt, NULL};
-                if (putRECQ (&rc, &queEvt) == noneEvt)
-                    devError |= devQue;
+                if (putRECQ (&rc, &queEvt) == noneEvt) devError |= devQue;
             }
         }
     }
@@ -706,7 +706,7 @@ int main (void) {
                     cnt_last = cnt;
 #ifdef SET_SSD1306_SPI
                     OLED_clear_line(2, inv);
-                            OLED_text_xy(tmp, OLED_calcx(sprintf(tmp, "QUE:%d", cnt)), 2, inv);
+                    OLED_text_xy(tmp, OLED_calcx(sprintf(tmp, "QUE:%d", cnt)), 2, inv);
 #endif
                 }
             }*/
@@ -716,10 +716,12 @@ int main (void) {
                 break;
                 case rstEvt:
 #ifdef SET_SSD1306_SPI
-                    OLED_Clear();
+                    //OLED_Clear();
+                    OLED_clear_line(LAST_LINE, inv);
+                    OLED_text_xy(tmp, OLED_calcx(sprintf(tmp, "Restarting...")), LAST_LINE, inv);
 #endif
                     Report (NULL, true, "Restart...%s%s", eol, eol);
-                    Delay_Ms (100);
+                    Delay_Ms(250);
                     NVIC_SystemReset();
                 break;
                 case keyEvt:
@@ -767,13 +769,15 @@ int main (void) {
                         ledVolt(VOLT_LED_ON);
                     else
                         ledVolt(VOLT_LED_OFF);
-                    if (no_vld && !gps_valid) {
-                        s_float_t flo = {0, 0};
-                        floatPart(volt, &flo);
+                    if (!sleep_mode) {
+                        if (no_vld && !gps_valid) {
+                            s_float_t flo = {0, 0};
+                            floatPart(volt, &flo);
     #ifdef SET_SSD1306_SPI
-                        OLED_clear_line(LAST_LINE, inv);
-                        OLED_text_xy(scr, OLED_calcx(sprintf(scr, "volt:%u.%02u\n", flo.cel, flo.dro / 1000)), LAST_LINE, inv);
+                            OLED_clear_line(LAST_LINE, inv);
+                            OLED_text_xy(scr, OLED_calcx(sprintf(scr, "volt:%u.%02u\n", flo.cel, flo.dro / 1000)), LAST_LINE, inv);
     #endif             
+                        }
                     }
                     //ADC_SoftwareStartConvCmd(ADC1, ENABLE);
 #endif
@@ -880,8 +884,10 @@ int main (void) {
         }
         //
         if (key_tmr) {
-            key_tmr = 0;
-            key_enable = true;
+            if (check_sec(key_tmr)) {
+                key_tmr = 0;
+                key_enable = true;
+            }
         }
         //
         if (devError) {
